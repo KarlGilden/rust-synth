@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Document</title>
+	</head>
+	<body>
+		<button onclick="start()">Start Synth</button>
+		<!-- <button onclick="play()">Play</button>
+		<button onclick="pause()">Pause</button> -->
+
+		<label for="volume">Volume:</label>
+		<input
+			type="range"
+			id="volume"
+			name="volume"
+			min="0"
+			max="100"
+			value="20"
+			oninput="updateVolume(this.value)" />
+
+		<button onmousedown="playNote(440)" onmouseup="pauseNote()">A</button>
+		<button onmousedown="playNote(466.16)" onmouseup="pauseNote()">A#</button>
+		<button onmousedown="playNote(493.88)" onmouseup="pauseNote()">B</button>
+		<button onmousedown="playNote(261.63)" onmouseup="pauseNote()">C</button>
+
+		<script>
+			let node;
+			let ctx;
+
+			async function start() {
+				if (!ctx) {
+					ctx = new AudioContext();
+
+					const wasmBytes = await init();
+
+					await ctx.audioWorklet.addModule("synth-processor.js");
+
+					node = new AudioWorkletNode(ctx, "synth-processor", {
+						processorOptions: {
+							wasmBytes,
+						},
+					});
+					node.connect(ctx.destination);
+
+					if (ctx.state === "suspended") {
+						await ctx.resume();
+					}
+				}
+			}
+
+			function updateVolume(value) {
+				node.port.postMessage({
+					type: "gain",
+					value: value / 100,
+				});
+			}
+
+			function playNote(value) {
+				const gain = document.getElementById("volume").value;
+				console.log(value);
+				console.log(gain);
+				node.port.postMessage({
+					type: "gain",
+					value: gain / 100,
+				});
+				node.port.postMessage({
+					type: "frequency",
+					value: value,
+				});
+			}
+
+			function pauseNote() {
+				node.port.postMessage({
+					type: "gain",
+					value: 0.0,
+				});
+			}
+
+			async function play() {
+				node.port.postMessage({
+					type: "gain",
+					value: 0.2,
+				});
+
+				node.port.postMessage({
+					type: "frequency",
+					value: 440,
+				});
+			}
+
+			async function pause() {
+				node?.port.postMessage({
+					type: "gain",
+					value: 0.0,
+				});
+			}
+
+			async function init() {
+				const res = await fetch("hello_wasm.wasm");
+				return await res.arrayBuffer();
+			}
+		</script>
+	</body>
+</html>
