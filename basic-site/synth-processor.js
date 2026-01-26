@@ -39,6 +39,14 @@ class SynthProcessor extends AudioWorkletProcessor {
 			if (type === "frequency") {
 				this.wasm.synth_set_frequency(this.synth, value);
 			}
+
+			if (type === "noteOn") {
+				this.wasm.synth_note_on(this.synth);
+			}
+
+			if (type === "noteOff") {
+				this.wasm.synth_note_off(this.synth);
+			}
 		};
 	}
 

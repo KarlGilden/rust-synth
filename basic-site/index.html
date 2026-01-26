@@ -3,96 +3,121 @@
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="stylesheet" href="index.css" />
 		<title>Document</title>
 	</head>
-	<body>
-		<button onclick="start()">Start Synth</button>
-		<!-- <button onclick="play()">Play</button>
-		<button onclick="pause()">Pause</button> -->
+	<body class="dark">
+		<div
+			class="container flex-container flex-col"
+			style="max-width: fit-content">
+			<div class="container border-container flex-container items-center">
+				<button id="start-btn" class="start-button" onclick="pressPower()">
+					<svg
+						id="power-icon"
+						xmlns="http://www.w3.org/2000/svg"
+						fill="none"
+						viewBox="0 0 24 24"
+						class="">
+						<path
+							strokeLinecap="round"
+							strokeLinejoin="round"
+							d="M5.636 5.636a9 9 0 1 0 12.728 0M12 3v9" />
+					</svg>
+				</button>
+				<h1><span class="highlight-text">Rusty</span> Synth</h1>
+			</div>
 
-		<label for="volume">Volume:</label>
-		<input
-			type="range"
-			id="volume"
-			name="volume"
-			min="0"
-			max="100"
-			value="20" />
+			<div class="synth container border-container flex-container flex-col">
+				<div id="synth-blocker" class="blocker"></div>
+				<div class="container border-container controls-container">
+					<div class="control-wrapper">
+						<label for="volume">Volume:</label>
+						<input
+							type="range"
+							id="volume"
+							name="volume"
+							min="0"
+							max="100"
+							value="20" />
+					</div>
+				</div>
 
-		<button onmousedown="playNote(440)" onmouseup="pauseNote()">A</button>
-		<button onmousedown="playNote(466.16)" onmouseup="pauseNote()">A#</button>
-		<button onmousedown="playNote(493.88)" onmouseup="pauseNote()">B</button>
-		<button onmousedown="playNote(261.63)" onmouseup="pauseNote()">C</button>
-
-		<script>
-			let node;
-			let ctx;
-
-			async function start() {
-				if (!ctx) {
-					ctx = new AudioContext();
-
-					const wasmBytes = await init();
-
-					await ctx.audioWorklet.addModule("synth-processor.js");
-
-					node = new AudioWorkletNode(ctx, "synth-processor", {
-						processorOptions: {
-							wasmBytes,
-						},
-					});
-					node.connect(ctx.destination);
-
-					if (ctx.state === "suspended") {
-						await ctx.resume();
-					}
-				}
-			}
-
-			function playNote(value) {
-				const gain = document.getElementById("volume").value;
-				console.log(value);
-				console.log(gain);
-				node.port.postMessage({
-					type: "gain",
-					value: gain / 100,
-				});
-				node.port.postMessage({
-					type: "frequency",
-					value: value,
-				});
-			}
-
-			function pauseNote() {
-				node.port.postMessage({
-					type: "gain",
-					value: 0.0,
-				});
-			}
-
-			async function play() {
-				node.port.postMessage({
-					type: "gain",
-					value: 0.2,
-				});
-
-				node.port.postMessage({
-					type: "frequency",
-					value: 440,
-				});
-			}
-
-			async function pause() {
-				node?.port.postMessage({
-					type: "gain",
-					value: 0.0,
-				});
-			}
-
-			async function init() {
-				const res = await fetch("hello_wasm.wasm");
-				return await res.arrayBuffer();
-			}
-		</script>
+				<div class="container border-container keyboard-container">
+					<button
+						class="keyboard-key"
+						onmousedown="playNote(notes['C4'])"
+						onmouseup="pauseNote()">
+						C
+					</button>
+					<button
+						class="keyboard-key"
+						onmousedown="playNote(notes['C#4'])"
+						onmouseup="pauseNote()">
+						C#
+					</button>
+					<button
+						class="keyboard-key"
+						onmousedown="playNote(notes['D4'])"
+						onmouseup="pauseNote()">
+						D
+					</button>
+					<button
+						class="keyboard-key"
+						onmousedown="playNote(notes['D#4'])"
+						onmouseup="pauseNote()">
+						D#
+					</button>
+					<button
+						class="keyboard-key"
+						onmousedown="playNote(notes['E4'])"
+						onmouseup="pauseNote()">
+						E
+					</button>
+					<button
+						class="keyboard-key"
+						onmousedown="playNote(notes['F4'])"
+						onmouseup="pauseNote()">
+						F
+					</button>
+					<button
+						class="keyboard-key"
+						onmousedown="playNote(notes['F#4'])"
+						onmouseup="pauseNote()">
+						F#
+					</button>
+					<button
+						class="keyboard-key"
+						onmousedown="playNote(notes['G4'])"
+						onmouseup="pauseNote()">
+						G
+					</button>
+					<button
+						class="keyboard-key"
+						onmousedown="playNote(notes['G#4'])"
+						onmouseup="pauseNote()">
+						G#
+					</button>
+					<button
+						class="keyboard-key"
+						onmousedown="playNote(notes['A4'])"
+						onmouseup="pauseNote()">
+						A
+					</button>
+					<button
+						class="keyboard-key"
+						onmousedown="playNote(notes['A#4'])"
+						onmouseup="pauseNote()">
+						A#
+					</button>
+					<button
+						class="keyboard-key"
+						onmousedown="playNote(notes['B4'])"
+						onmouseup="pauseNote()">
+						B
+					</button>
+				</div>
+			</div>
+		</div>
+		<script src="index.js"></script>
 	</body>
 </html>

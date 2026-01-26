@@ -1,0 +1,145 @@
+:root {
+	--highlight: rgb(214, 125, 7);
+	--primary-light: #fff;
+	--primary: #fff;
+	--primary-dark: #ececec;
+	--border-color: grey;
+	--text-color: #000;
+}
+
+.dark {
+	--highlight: rgb(214, 125, 7);
+	--primary-light: #333;
+	--primary: #222;
+	--primary-dark: #111;
+	--border-color: #4d4c4c;
+	--text-color: #fff;
+}
+
+.highlight-text {
+	color: var(--highlight) !important;
+}
+
+.highlight-background {
+	background-color: var(--highlight) !important;
+}
+
+.highlight-border {
+	border-color: var(--highlight) !important;
+}
+
+#power-icon {
+	stroke: var(--border-color);
+	stroke-width: 3px;
+	width: 20px;
+}
+
+.power-icon-on {
+	stroke: var(--highlight) !important;
+}
+
+input[type="range"] {
+	accent-color: var(--highlight); /* Green color */
+	cursor: pointer;
+}
+
+* {
+	padding: 0;
+	margin: 0;
+	box-sizing: border-box;
+	font-family: Arial, Helvetica, sans-serif;
+	color: var(--text-color);
+}
+
+.synth {
+	position: relative;
+}
+
+.blocker {
+	position: absolute;
+	background-color: rgba(0, 0, 0, 0.164);
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	display: none;
+}
+
+.show {
+	display: block;
+}
+
+.container {
+	padding: 1rem;
+	background-color: var(--primary);
+}
+
+.start-button {
+	border-radius: 100%;
+	width: 50px;
+	height: 50px;
+	border: 2px var(--border-color) solid;
+	cursor: pointer;
+	background-color: transparent;
+}
+
+.start-button:hover {
+	background-color: var(--primary-dark);
+}
+
+.border-container {
+	border: 1px solid var(--border-color);
+	border-radius: 0.25rem;
+}
+
+.flex-container {
+	display: flex;
+	gap: 1rem;
+}
+
+.flex-col {
+	flex-direction: column;
+}
+
+.justify-center {
+	justify-content: center;
+}
+
+.items-center {
+	align-items: center;
+}
+
+.controls-container {
+}
+
+.control-wrapper {
+	display: flex;
+	flex-direction: column;
+}
+
+.keyboard-container {
+	display: flex;
+}
+
+.keyboard-key {
+	padding: 1rem;
+	background-color: white;
+	border: 1px solid var(--border-color);
+	border-radius: 0.25rem;
+	display: flex;
+	flex-direction: column;
+	justify-content: end;
+	align-items: center;
+	font-size: 1rem;
+	height: 200px;
+	width: 50px;
+	cursor: pointer;
+}
+
+.keyboard-key:hover {
+	background-color: rgb(223, 223, 223);
+}
+
+.keyboard-key:active {
+	background-color: grey;
+}
