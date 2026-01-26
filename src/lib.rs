@@ -110,7 +110,10 @@ pub extern "C" fn synth_render(synth: *mut Synth, buffer: *mut f32, frames: usiz
 
         let osc = synth.osc.next(synth.params.frequency.current, synth.sample_rate);
 
-        *sample = osc * synth.params.gain.current;
+        let freq = synth.params.frequency.current;
+        let loudness_comp = (freq / 440.0).sqrt().clamp(0.5, 1.2);
+
+        *sample = osc * synth.params.gain.current * loudness_comp;
     }
 }
 

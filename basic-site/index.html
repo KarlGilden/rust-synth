@@ -17,8 +17,7 @@
 			name="volume"
 			min="0"
 			max="100"
-			value="20"
-			oninput="updateVolume(this.value)" />
+			value="20" />
 
 		<button onmousedown="playNote(440)" onmouseup="pauseNote()">A</button>
 		<button onmousedown="playNote(466.16)" onmouseup="pauseNote()">A#</button>
@@ -48,13 +47,6 @@
 						await ctx.resume();
 					}
 				}
-			}
-
-			function updateVolume(value) {
-				node.port.postMessage({
-					type: "gain",
-					value: value / 100,
-				});
 			}
 
 			function playNote(value) {
