@@ -31,7 +31,7 @@ class SynthProcessor extends AudioWorkletProcessor {
 
 		this.port.onmessage = e => {
 			const { type, value } = e.data;
-
+			console.log(value);
 			if (type === "gain") {
 				this.wasm.synth_set_gain(this.synth, value);
 			}
@@ -46,6 +46,16 @@ class SynthProcessor extends AudioWorkletProcessor {
 
 			if (type === "noteOff") {
 				this.wasm.synth_note_off(this.synth);
+			}
+
+			if (type === "setADSR") {
+				this.wasm.synth_set_adsr(
+					this.synth,
+					value.attack,
+					value.decay,
+					value.sustain,
+					value.release
+				);
 			}
 		};
 	}

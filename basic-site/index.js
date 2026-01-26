@@ -42,8 +42,7 @@ function stop() {
 
 function playNote(value) {
 	const gain = document.getElementById("volume").value;
-	console.log(value);
-	console.log(gain);
+
 	node.port.postMessage({
 		type: "gain",
 		value: gain / 100,
@@ -62,25 +61,6 @@ function pauseNote() {
 		type: "noteOff",
 	});
 	node.port.postMessage({
-		type: "gain",
-		value: 0.0,
-	});
-}
-
-async function play() {
-	node.port.postMessage({
-		type: "gain",
-		value: 0.2,
-	});
-
-	node.port.postMessage({
-		type: "frequency",
-		value: 440,
-	});
-}
-
-async function pause() {
-	node?.port.postMessage({
 		type: "gain",
 		value: 0.0,
 	});
@@ -113,6 +93,23 @@ function toggleSynthOn(isOn) {
 		powerIcon.classList.remove("power-icon-on");
 		cover.classList.add("show");
 	}
+}
+
+function onADSRChange() {
+	const a = document.getElementById("attack");
+	const d = document.getElementById("decay");
+	const s = document.getElementById("sustain");
+	const r = document.getElementById("release");
+
+	node.port.postMessage({
+		type: "setADSR",
+		value: {
+			attack: a.value / 100,
+			decay: d.value / 100,
+			sustain: s.value / 100,
+			releae: r.value / 100,
+		},
+	});
 }
 
 checkContext();
@@ -165,14 +162,4 @@ function generateNoteFrequencies(startNote = "C0", endNote = "B8") {
 	return frequencies;
 }
 
-// Example usage:
-try {
-	notes = generateNoteFrequencies("C0", "B8");
-	for (const [note, freq] of Object.entries(notes)) {
-		console.log(`${note}: ${freq} Hz`);
-	}
-} catch (err) {
-	console.error(err.message);
-}
-
-console.log(notes);
+notes = generateNoteFrequencies("C0", "B8");
