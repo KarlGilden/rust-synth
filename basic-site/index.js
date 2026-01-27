@@ -1,6 +1,7 @@
 let node;
 let ctx;
 let notes = {};
+let volume = document.getElementById("volume").value;
 
 function pressPower() {
 	if (!ctx) {
@@ -41,7 +42,7 @@ function stop() {
 }
 
 function playNote(value) {
-	const gain = document.getElementById("volume").value;
+	const gain = volume;
 
 	node.port.postMessage({
 		type: "gain",
@@ -59,10 +60,6 @@ function playNote(value) {
 function pauseNote() {
 	node.port.postMessage({
 		type: "noteOff",
-	});
-	node.port.postMessage({
-		type: "gain",
-		value: 0.0,
 	});
 }
 
@@ -100,14 +97,14 @@ function onADSRChange() {
 	const d = document.getElementById("decay");
 	const s = document.getElementById("sustain");
 	const r = document.getElementById("release");
-
+	console.log(a.value, d.value, s.value, r.value);
 	node.port.postMessage({
 		type: "setADSR",
 		value: {
 			attack: a.value / 100,
 			decay: d.value / 100,
 			sustain: s.value / 100,
-			releae: r.value / 100,
+			release: r.value / 100,
 		},
 	});
 }
@@ -163,3 +160,9 @@ function generateNoteFrequencies(startNote = "C0", endNote = "B8") {
 }
 
 notes = generateNoteFrequencies("C0", "B8");
+console.log(
+	document.getElementById("attack").value,
+	document.getElementById("decay").value,
+	document.getElementById("sustain").value,
+	document.getElementById("release").value
+);
