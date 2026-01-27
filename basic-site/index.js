@@ -97,7 +97,7 @@ function onADSRChange() {
 	const d = document.getElementById("decay");
 	const s = document.getElementById("sustain");
 	const r = document.getElementById("release");
-	console.log(a.value, d.value, s.value, r.value);
+
 	node.port.postMessage({
 		type: "setADSR",
 		value: {
@@ -107,6 +107,10 @@ function onADSRChange() {
 			release: r.value / 100,
 		},
 	});
+}
+
+function onVolumeChange() {
+	volume = document.getElementById("volume").value;
 }
 
 checkContext();
@@ -160,9 +164,3 @@ function generateNoteFrequencies(startNote = "C0", endNote = "B8") {
 }
 
 notes = generateNoteFrequencies("C0", "B8");
-console.log(
-	document.getElementById("attack").value,
-	document.getElementById("decay").value,
-	document.getElementById("sustain").value,
-	document.getElementById("release").value
-);
