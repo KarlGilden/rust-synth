@@ -61,6 +61,15 @@ pub struct SynthParams {
     pub frequency: Param
 }
 
+#[repr(C)]
+#[derive(Copy, Clone)]
+enum WaveForm {
+    Sine,
+    Square,
+    Triangle,
+    Saw,
+}
+
 #[derive(Copy, Clone)]
 enum EnvStage {
     Idle,
@@ -143,15 +152,33 @@ impl Envelope {
 
 pub struct Oscillator {
     phase: f32,
+    waveform: WaveForm
 }
 
 impl Oscillator {
     fn new() -> Self {
-        Self {phase: 0.0}
+        Self {phase: 0.0, waveform: WaveForm::Sine}
+    }
+
+    fn sample(&self) -> f32{
+        match self.waveform {
+            WaveForm::Sine => 
+                (self.phase * TAU).sin(),
+            
+            WaveForm::Square => 
+                if self.phase < 0.5 { 1.0 } else { -0.1 },
+            
+            WaveForm::Triangle => 
+                1.0 - 4.0 * (self.phase -0.5).abs(),
+            
+            WaveForm::Saw => 
+                2.0 * self.phase - 1.0
+            
+        }
     }
 
     fn next(&mut self, freq: f32, sample_rate: f32) -> f32 {
-        let output = (self.phase * TAU).sin();
+        let output = self.sample();
         self.phase += freq / sample_rate;
 
         if self.phase >= 1.0 {
@@ -200,6 +227,8 @@ pub extern "C" fn synth_render(synth: *mut Synth, buffer: *mut f32, frames: usiz
     }
 }
 
+// Web API
+
 #[no_mangle]
 pub extern "C" fn synth_set_gain(synth: *mut Synth, value: f32) {
     unsafe { (*synth).params.gain.target = value}
@@ -233,6 +262,20 @@ pub extern "C" fn synth_set_adsr(
     env.decay = decay.max(0.001);
     env.sustain = sustain.clamp(0.0, 1.0);
     env.release = release.max(0.001);
+}
+
+#[no_mangle]
+pub extern "C" fn synth_set_waveform(
+    synth: *mut Synth,
+    waveform: i32,
+){
+    let osc = unsafe { &mut (*synth).osc };
+    osc.waveform = match waveform {
+        1 => WaveForm::Square,
+        2 => WaveForm::Triangle,
+        3 => WaveForm::Saw,
+        _ => WaveForm::Sine
+    }
 }
 
 #[no_mangle]

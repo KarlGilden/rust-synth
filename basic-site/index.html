@@ -29,7 +29,7 @@
 
 			<div class="synth container border-container flex-container flex-col">
 				<div id="synth-blocker" class="blocker"></div>
-				<div class="container border-container controls-container">
+				<div class="container border-container">
 					<div class="control-wrapper">
 						<label for="volume">Volume:</label>
 						<input
@@ -41,49 +41,84 @@
 							value="20"
 							onchange="onVolumeChange()" />
 					</div>
-					<div class="control-wrapper">
-						<label for="attack">Attack:</label>
+				</div>
+				<div class="container border-container flex-container">
+					<div class="radio-control-wrapper">
+						<label for="sine">Sine</label>
 						<input
-							type="range"
-							id="attack"
-							name="attack"
-							min="0"
-							max="100"
-							value="10"
-							onchange="onADSRChange()" />
+							type="radio"
+							id="sine"
+							name="waveform"
+							value="0"
+							onchange="onWaveformChange()"
+							checked="true" />
+						<label for="square">Square</label>
+						<input
+							type="radio"
+							id="square"
+							name="waveform"
+							value="1"
+							onchange="onWaveformChange()" />
+						<label for="triangle">Triangle</label>
+						<input
+							type="radio"
+							id="triangle"
+							name="waveform"
+							value="2"
+							onchange="onWaveformChange()" />
+						<label for="saw">Saw</label>
+						<input
+							type="radio"
+							id="saw"
+							name="waveform"
+							value="3"
+							onchange="onWaveformChange()" />
 					</div>
-					<div class="control-wrapper">
-						<label for="decay">Decay:</label>
-						<input
-							type="range"
-							id="decay"
-							name="decay"
-							min="0"
-							max="100"
-							value="20"
-							onchange="onADSRChange()" />
-					</div>
-					<div class="control-wrapper">
-						<label for="sustain">Sustain:</label>
-						<input
-							type="range"
-							id="sustain"
-							name="sustain"
-							min="0"
-							max="100"
-							value="70"
-							onchange="onADSRChange()" />
-					</div>
-					<div class="control-wrapper">
-						<label for="release">Release:</label>
-						<input
-							type="range"
-							id="release"
-							name="release"
-							min="0"
-							max="100"
-							value="30"
-							onchange="onADSRChange()" />
+					<div class="flex-1">
+						<div class="control-wrapper">
+							<label for="attack">Attack:</label>
+							<input
+								type="range"
+								id="attack"
+								name="attack"
+								min="0"
+								max="100"
+								value="10"
+								onchange="onADSRChange()" />
+						</div>
+						<div class="control-wrapper">
+							<label for="decay">Decay:</label>
+							<input
+								type="range"
+								id="decay"
+								name="decay"
+								min="0"
+								max="100"
+								value="20"
+								onchange="onADSRChange()" />
+						</div>
+						<div class="control-wrapper">
+							<label for="sustain">Sustain:</label>
+							<input
+								type="range"
+								id="sustain"
+								name="sustain"
+								min="0"
+								max="100"
+								value="70"
+								onchange="onADSRChange()" />
+						</div>
+						<div class="control-wrapper">
+							<label for="release">Release:</label>
+							<input
+								type="range"
+								id="release"
+								name="release"
+								min="0"
+								max="100"
+								value="30"
+								onchange="onADSRChange()" />
+						</div>
 					</div>
 				</div>
 

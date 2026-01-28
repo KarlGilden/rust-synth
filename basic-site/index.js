@@ -2,7 +2,8 @@ let node;
 let ctx;
 let notes = {};
 let volume = document.getElementById("volume").value;
-
+let waveform =
+	document.querySelector('input[name="waveform"]:checked').value ?? "0";
 function pressPower() {
 	if (!ctx) {
 		start();
@@ -99,7 +100,7 @@ function onADSRChange() {
 	const r = document.getElementById("release");
 
 	node.port.postMessage({
-		type: "setADSR",
+		type: "envelope",
 		value: {
 			attack: a.value / 100,
 			decay: d.value / 100,
@@ -111,6 +112,18 @@ function onADSRChange() {
 
 function onVolumeChange() {
 	volume = document.getElementById("volume").value;
+}
+
+function onWaveformChange() {
+	const waveform =
+		document.querySelector('input[name="waveform"]:checked').value ?? 0;
+
+	if (!waveform) console.log("defaulting to sine");
+
+	node.port.postMessage({
+		type: "waveform",
+		value: parseInt(waveform ?? 0),
+	});
 }
 
 checkContext();

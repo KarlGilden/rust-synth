@@ -48,7 +48,7 @@ class SynthProcessor extends AudioWorkletProcessor {
 				this.wasm.synth_note_off(this.synth);
 			}
 
-			if (type === "setADSR") {
+			if (type === "envelope") {
 				this.wasm.synth_set_adsr(
 					this.synth,
 					value.attack,
@@ -56,6 +56,10 @@ class SynthProcessor extends AudioWorkletProcessor {
 					value.sustain,
 					value.release
 				);
+			}
+
+			if (type === "waveform") {
+				this.wasm.synth_set_waveform(this.synth, value);
 			}
 		};
 	}
