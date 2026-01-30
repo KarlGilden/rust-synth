@@ -13,7 +13,7 @@ const settings = {
 		release: () => document.getElementById("release").value / 100,
 	},
 	LFO: {
-		frequency: () => document.getElementById("lfoFreq"),
+		frequency: () => document.getElementById("lfoFreq").value,
 	},
 };
 
