@@ -42,6 +42,20 @@
 							onchange="onVolumeChange()" />
 					</div>
 				</div>
+				<div class="container border-container">
+					<small>LFO</small>
+					<div class="control-wrapper">
+						<label for="lfoFreq">Freq:</label>
+						<input
+							type="range"
+							id="lfoFreq"
+							name="lfoFreq"
+							min="0"
+							max="1000"
+							value="20"
+							onchange="onLFOFrequencyChange()" />
+					</div>
+				</div>
 				<div class="container border-container flex-container">
 					<div class="radio-control-wrapper">
 						<label for="sine">Sine</label>
@@ -199,5 +213,6 @@
 			</div>
 		</div>
 		<script src="index.js"></script>
+		<script src="audioController.js"></script>
 	</body>
 </html>

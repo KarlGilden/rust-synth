@@ -1,20 +1,38 @@
 let node;
 let ctx;
 let notes = {};
-let volume = document.getElementById("volume").value;
-let waveform =
-	document.querySelector('input[name="waveform"]:checked').value ?? "0";
+
+const settings = {
+	volume: () => document.getElementById("volume").value / 100,
+	waveform: () =>
+		document.querySelector('input[name="waveform"]:checked').value,
+	envelope: {
+		attack: () => document.getElementById("attack").value / 100,
+		decay: () => document.getElementById("decay").value / 100,
+		sustain: () => document.getElementById("sustain").value / 100,
+		release: () => document.getElementById("release").value / 100,
+	},
+	LFO: {
+		frequency: () => document.getElementById("lfoFreq"),
+	},
+};
+
+async function init() {
+	const res = await fetch("hello_wasm.wasm");
+	return await res.arrayBuffer();
+}
+
 function pressPower() {
 	if (!ctx) {
-		start();
+		startSynth();
 	} else {
-		stop();
+		stopSynth();
 	}
 
 	checkContext();
 }
 
-async function start() {
+async function startSynth() {
 	if (!ctx) {
 		ctx = new AudioContext();
 
@@ -35,38 +53,22 @@ async function start() {
 	}
 }
 
-function stop() {
+function stopSynth() {
 	if (!!ctx) {
 		ctx = undefined;
 		checkContext();
 	}
 }
 
-function playNote(value) {
-	const gain = volume;
-
-	node.port.postMessage({
-		type: "gain",
-		value: gain / 100,
-	});
-	node.port.postMessage({
-		type: "frequency",
-		value: value,
-	});
-	node.port.postMessage({
-		type: "noteOn",
-	});
+function playNote(frequency) {
+	const gain = settings.volume();
+	setGain(gain);
+	setFrequency(frequency);
+	noteOn();
 }
 
 function pauseNote() {
-	node.port.postMessage({
-		type: "noteOff",
-	});
-}
-
-async function init() {
-	const res = await fetch("hello_wasm.wasm");
-	return await res.arrayBuffer();
+	noteOff();
 }
 
 function checkContext() {
@@ -94,36 +96,20 @@ function toggleSynthOn(isOn) {
 }
 
 function onADSRChange() {
-	const a = document.getElementById("attack");
-	const d = document.getElementById("decay");
-	const s = document.getElementById("sustain");
-	const r = document.getElementById("release");
-
-	node.port.postMessage({
-		type: "envelope",
-		value: {
-			attack: a.value / 100,
-			decay: d.value / 100,
-			sustain: s.value / 100,
-			release: r.value / 100,
-		},
-	});
+	setEnvelope(
+		settings.envelope.attack(),
+		settings.envelope.decay(),
+		settings.envelope.sustain(),
+		settings.envelope.release()
+	);
 }
 
-function onVolumeChange() {
-	volume = document.getElementById("volume").value;
+function onLFOFrequencyChange() {
+	setLFOFrequency(settings.LFO.frequency());
 }
 
 function onWaveformChange() {
-	const waveform =
-		document.querySelector('input[name="waveform"]:checked').value ?? 0;
-
-	if (!waveform) console.log("defaulting to sine");
-
-	node.port.postMessage({
-		type: "waveform",
-		value: parseInt(waveform ?? 0),
-	});
+	setWaveform(parseInt(settings.waveform() ?? 0));
 }
 
 checkContext();

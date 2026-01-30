@@ -1,45 +1,10 @@
-//use wasm_bindgen::prelude::*;
 use std::f32::consts::{TAU};
-
-// #[wasm_bindgen]
-// pub struct Oscillator {
-//     freq: f32,
-//     sample_rate: f32,
-//     phase: f32
-// }
-
-
-// #[wasm_bindgen]
-// impl Oscillator {
-//     #[wasm_bindgen(constructor)]
-//     pub fn new(freq: f32, sample_rate: f32) -> Oscillator {
-//         Oscillator { freq, sample_rate, phase: 0.0 }
-//     }
-
-//     pub fn next_sample(&mut self) -> f32 {
-//         let sample = 2.0 * PI * self.phase.sin();
-//         self.phase += self.freq / self.sample_rate;
-//         if self.phase >= 1.0 {
-//             self.phase -= 1.0;
-//         }
-//         sample
-//     }
-// }
-
-// #[wasm_bindgen]
-// extern {
-//     fn alert(s: &str);
-// }
-
-// #[wasm_bindgen]
-// pub fn greet(s: &str){
-//     alert(s)
-// }
 
 #[repr(C)]
 pub struct Param {
     current: f32,
-    target: f32
+    target: f32,
+    modulation: f32
 }
 
 impl Param {
@@ -47,19 +12,30 @@ impl Param {
         Self {
             current: value,
             target: value,
+            modulation: 0.0
         }
+    }
+
+    fn value(&self) -> f32 {
+        self.current + self.modulation
     }
 
     fn smooth (&mut self, coeff: f32) {
         self.current += (self.target - self.current) * coeff;
+        self.modulation = 0.0;
     }
 }
 
 #[repr(C)]
-pub struct SynthParams {
-    pub gain: Param,
-    pub frequency: Param
+pub enum ParamId {
+    Frequency,
+    Gain
 }
+
+const SINE_GAIN: f32 = 1.0;
+const TRIANGLE_GAIN: f32 = 1.2247;
+const SQUARE_GAIN: f32 = 0.7071;
+const SAW_GAIN: f32 = 1.2247;
 
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -150,6 +126,32 @@ impl Envelope {
     }
 }
 
+pub struct Lfo {
+    phase: f32,
+    freq: f32
+}
+
+impl Lfo {
+    pub fn new() -> Self {
+        Self{
+            phase: 0.0, 
+            freq: 440.0
+        }
+    }
+
+    pub fn next(&mut self, sample_rate: f32) -> f32 {
+        let value = (self.phase * TAU).sin();
+
+        self.phase += self.freq / sample_rate;
+
+        if self.phase >= 1.0 {
+            self.phase -= 1.0;
+        }
+
+        value
+    }
+}
+
 pub struct Oscillator {
     phase: f32,
     waveform: WaveForm
@@ -163,16 +165,16 @@ impl Oscillator {
     fn sample(&self) -> f32{
         match self.waveform {
             WaveForm::Sine => 
-                (self.phase * TAU).sin(),
+                (self.phase * TAU).sin() * SINE_GAIN,
             
             WaveForm::Square => 
-                if self.phase < 0.5 { 1.0 } else { -0.1 },
+                if self.phase < 0.5 { 1.0 * SQUARE_GAIN} else { -0.1 * SQUARE_GAIN },
             
             WaveForm::Triangle => 
-                1.0 - 4.0 * (self.phase -0.5).abs(),
+                (1.0 - 4.0 * (self.phase -0.5).abs()) * TRIANGLE_GAIN,
             
             WaveForm::Saw => 
-                2.0 * self.phase - 1.0
+                (2.0 * self.phase - 1.0) * SAW_GAIN
             
         }
     }
@@ -192,7 +194,10 @@ impl Oscillator {
 pub struct Synth {
     osc: Oscillator,
     env: Envelope,
-    params: SynthParams,
+    lfo: Lfo,
+    params: [Param; 2],
+    vibrato_depth: f32,
+    tremolo_depth: f32,
     sample_rate: f32
 }
 
@@ -201,7 +206,13 @@ pub extern "C" fn synth_new(sample_rate: f32) -> *mut Synth {
     let synth = Synth{
         osc: Oscillator::new(),
         env: Envelope::new(),
-        params: SynthParams { gain: Param::new(0.0), frequency: Param::new(440.0) },
+        lfo: Lfo::new(),
+        params: [
+            Param::new(440.0),
+            Param::new(0.0),
+        ],
+        vibrato_depth: 0.1,
+        tremolo_depth: 0.2,
         sample_rate,
     };
 
@@ -214,16 +225,24 @@ pub extern "C" fn synth_render(synth: *mut Synth, buffer: *mut f32, frames: usiz
     let output = unsafe { std::slice::from_raw_parts_mut(buffer, frames)};
 
     for sample in output.iter_mut() {
-        synth.params.gain.smooth(0.001);
-        synth.params.frequency.smooth(0.001);
+        for param in &mut synth.params {
+            param.smooth(0.001);
+        }
 
+        let lfo = synth.lfo.next(synth.sample_rate);
         let env = synth.env.next(synth.sample_rate);
-        let osc = synth.osc.next(synth.params.frequency.current, synth.sample_rate);
 
-        let freq = synth.params.frequency.current;
+        synth.params[ParamId::Frequency as usize].modulation += lfo * synth.vibrato_depth;
+        synth.params[ParamId::Gain as usize].modulation += lfo * synth.tremolo_depth;
+
+        let freq = synth.params[ParamId::Frequency as usize].value();
+        let gain = synth.params[ParamId::Gain as usize].value() * env;
+
+        let osc = synth.osc.next(freq, synth.sample_rate);
+
         let loudness_comp = (freq / 440.0).sqrt().clamp(0.5, 1.2);
 
-        *sample = osc * synth.params.gain.current * loudness_comp * env;
+        *sample = osc * gain * loudness_comp ;
     }
 }
 
@@ -231,12 +250,12 @@ pub extern "C" fn synth_render(synth: *mut Synth, buffer: *mut f32, frames: usiz
 
 #[no_mangle]
 pub extern "C" fn synth_set_gain(synth: *mut Synth, value: f32) {
-    unsafe { (*synth).params.gain.target = value}
+    unsafe { (*synth).params[ParamId::Gain as usize] = Param::new(value)}
 }
 
 #[no_mangle]
 pub extern "C" fn synth_set_frequency(synth: *mut Synth, value: f32) {
-    unsafe { (*synth).params.frequency.target = value}
+    unsafe { (*synth).params[ParamId::Frequency as usize] = Param::new(value)}
 }
 
 #[no_mangle]
@@ -279,6 +298,11 @@ pub extern "C" fn synth_set_waveform(
 }
 
 #[no_mangle]
+pub extern "C" fn synth_set_lfo_freq(synth: *mut Synth, freq: f32) {
+    unsafe { (*synth).lfo.freq = freq}
+}
+
+#[no_mangle]
 pub extern "C" fn synth_free(ptr: *mut Synth) {
     unsafe {
         drop(Box::from_raw(ptr));
@@ -293,33 +317,3 @@ pub extern "C" fn alloc_buffer(frames: usize) -> *mut f32 {
     std::mem::forget(buffer);
     ptr
 }
-
-// #[no_mangle]
-// pub extern "C" fn generate_sine(sample_rate: u32, seconds: f32) -> *mut f32 {
-//     let total_samples = (sample_rate as f32 * seconds) as usize;
-//     let mut buffer = Vec::<f32>::with_capacity(total_samples);
-
-//     let freq = 440.0;
-//     let mut phase = 0.0;
-//     let phase_inc = freq / sample_rate as f32;
-
-//     for _ in 0..total_samples {
-//         buffer.push((phase * TAU).sin());
-//         phase += phase_inc;
-//         if phase >= 1.0 {
-//             phase -= 1.0;
-//         }
-//     }
-
-//     let ptr = buffer.as_mut_ptr();
-
-//     std::mem::forget(buffer);
-//     ptr
-// }
-
-// #[no_mangle]
-// pub extern "C" fn free_buffer(ptr: *mut f32, len: usize){
-//     unsafe{
-//         drop(Vec::from_raw_parts(ptr, len, len))
-//     }
-// }

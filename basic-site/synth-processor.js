@@ -31,7 +31,7 @@ class SynthProcessor extends AudioWorkletProcessor {
 
 		this.port.onmessage = e => {
 			const { type, value } = e.data;
-			console.log(value);
+
 			if (type === "gain") {
 				this.wasm.synth_set_gain(this.synth, value);
 			}
@@ -60,6 +60,10 @@ class SynthProcessor extends AudioWorkletProcessor {
 
 			if (type === "waveform") {
 				this.wasm.synth_set_waveform(this.synth, value);
+			}
+
+			if (type === "lfoFreq") {
+				this.wasm.synth_set_lfo_freq(this.synth, value);
 			}
 		};
 	}
