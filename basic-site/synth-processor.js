@@ -63,6 +63,7 @@ class SynthProcessor extends AudioWorkletProcessor {
 			}
 
 			if (type === "lfoFreq") {
+				console.log(value);
 				this.wasm.synth_set_lfo_freq(this.synth, value);
 			}
 		};

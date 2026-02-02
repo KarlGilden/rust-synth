@@ -105,6 +105,7 @@ function onADSRChange() {
 }
 
 function onLFOFrequencyChange() {
+	console.log(settings.LFO.frequency());
 	setLFOFrequency(settings.LFO.frequency());
 }
 

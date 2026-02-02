@@ -16,10 +16,6 @@ impl Param {
         }
     }
 
-    fn value(&self) -> f32 {
-        self.current + self.modulation
-    }
-
     fn smooth (&mut self, coeff: f32) {
         self.current += (self.target - self.current) * coeff;
         self.modulation = 0.0;
@@ -32,10 +28,23 @@ pub enum ParamId {
     Gain
 }
 
+#[repr(C)]
+pub enum ModSource {
+    Lfo1,
+    Env1
+}
+
 const SINE_GAIN: f32 = 1.0;
 const TRIANGLE_GAIN: f32 = 1.2247;
 const SQUARE_GAIN: f32 = 0.7071;
 const SAW_GAIN: f32 = 1.2247;
+
+#[repr(C)]
+pub struct ModRoute {
+    source: ModSource,
+    destination: ParamId,
+    depth: f32
+}
 
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -196,8 +205,7 @@ pub struct Synth {
     env: Envelope,
     lfo: Lfo,
     params: [Param; 2],
-    vibrato_depth: f32,
-    tremolo_depth: f32,
+    routes: Vec<ModRoute>,
     sample_rate: f32
 }
 
@@ -211,8 +219,18 @@ pub extern "C" fn synth_new(sample_rate: f32) -> *mut Synth {
             Param::new(440.0),
             Param::new(0.0),
         ],
-        vibrato_depth: 0.1,
-        tremolo_depth: 0.2,
+        routes: vec![
+            ModRoute {
+                source: ModSource::Lfo1,
+                destination: ParamId::Frequency,
+                depth: 1.0
+            },
+            ModRoute{
+                source: ModSource::Env1,
+                destination: ParamId::Gain,
+                depth: 1.0
+            }
+        ],
         sample_rate,
     };
 
@@ -229,20 +247,29 @@ pub extern "C" fn synth_render(synth: *mut Synth, buffer: *mut f32, frames: usiz
             param.smooth(0.001);
         }
 
-        let lfo = synth.lfo.next(synth.sample_rate);
-        let env = synth.env.next(synth.sample_rate);
+        let lfo_value = synth.lfo.next(synth.sample_rate);
+        let env_value = synth.env.next(synth.sample_rate);
 
-        synth.params[ParamId::Frequency as usize].modulation += lfo * synth.vibrato_depth;
-        synth.params[ParamId::Gain as usize].modulation += lfo * synth.tremolo_depth;
+        for route in &synth.routes {
+            let value = match route.source { 
+                ModSource::Lfo1 => lfo_value,
+                ModSource::Env1 => env_value
+            };
 
-        let freq = synth.params[ParamId::Frequency as usize].value();
-        let gain = synth.params[ParamId::Gain as usize].value() * env;
+            let destination = match route.destination {
+                ParamId::Frequency => ParamId::Frequency as usize,
+                ParamId::Gain => ParamId::Gain as usize
+            };
 
-        let osc = synth.osc.next(freq, synth.sample_rate);
+            synth.params[destination].modulation += value * route.depth;
+        }
 
-        let loudness_comp = (freq / 440.0).sqrt().clamp(0.5, 1.2);
+        let freq = synth.params[ParamId::Frequency as usize].current + synth.params[ParamId::Frequency as usize].modulation;
+        let gain = synth.params[ParamId::Gain as usize].current * synth.params[ParamId::Gain as usize].modulation;
 
-        *sample = osc * gain * loudness_comp ;
+        let osc_value = synth.osc.next(freq.clamp(20.0, 20_000.0), synth.sample_rate);
+
+        *sample = osc_value * gain.clamp(0.0, 1.0) ;
     }
 }
 
