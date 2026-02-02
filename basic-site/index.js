@@ -34,8 +34,8 @@ function pressPower() {
 
 async function startSynth() {
 	if (!ctx) {
-		const audioContext = window.AudioContext || window.webkitAudioContext;
-		ctx = new audioContext();
+		window.AudioContext = window.AudioContext || window.webkitAudioContext;
+		ctx = new window.AudioContext();
 
 		const wasmBytes = await init();
 
